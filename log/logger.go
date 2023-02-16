@@ -9,7 +9,7 @@ import (
 
 // Logger defines the interface for logging in the SDK
 type Logger interface {
-	zerolog.Logger
+	// zerolog.Logger
 }
 
 // Defines commons keys for logging
