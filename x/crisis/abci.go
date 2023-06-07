@@ -1,6 +1,7 @@
 package crisis
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -11,6 +12,8 @@ import (
 
 // check all registered invariants
 func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
+	fmt.Println("CRISIS END BLOCKER")
+
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyEndBlocker)
 
 	if k.InvCheckPeriod() == 0 || ctx.BlockHeight()%int64(k.InvCheckPeriod()) != 0 {
