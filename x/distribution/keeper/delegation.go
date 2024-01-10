@@ -123,6 +123,15 @@ func (k Keeper) CalculateDelegationRewards(ctx sdk.Context, val stakingtypes.Val
 		// however any greater amount should be considered a breach in expected
 		// behaviour.
 		marginOfErr := sdk.SmallestDec().MulInt64(3)
+
+		// temporary fix, as this validator has a mismatch between their tokens->shares
+		// and how many slashes they've received on-chain.
+		// In particular, tokens->shares indicates 3 slashes,
+		// but records show only 2 slashes occurred
+		if del.GetValidatorAddr().String() == "stridevaloper1tlz6ksce084ndhwlq2usghamvh0dut9q4z2gxd" {
+			marginOfErr = sdk.NewDecFromInt(sdk.NewInt(5000000))
+		}
+
 		if stake.LTE(currentStake.Add(marginOfErr)) {
 			stake = currentStake
 		} else {
