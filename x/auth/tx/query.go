@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"cosmossdk.io/math"
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -91,10 +92,56 @@ func QueryTx(clientCtx client.Context, hashHexStr string) (*sdk.TxResponse, erro
 
 	out, err := mkTxResult(clientCtx.TxConfig, resTx, resBlocks[resTx.Height])
 	if err != nil {
+		if strings.Contains(err.Error(), "Mismatched \"*types.MsgLiquidStake\"") {
+			return tryParsingLiquidStakeTx(resTx, resBlocks[resTx.Height])
+		}
 		return out, err
 	}
 
 	return out, nil
+}
+
+func tryParsingLiquidStakeTx(resTx *coretypes.ResultTx, block *coretypes.ResultBlock) (*sdk.TxResponse, error) {
+	var ok bool
+	var denom string
+	amountInt := math.ZeroInt()
+	for _, event := range resTx.TxResult.Events {
+		if event.Type == "coin_spent" {
+			for _, attribute := range event.Attributes {
+				if attribute.Key == "amount" && strings.Contains(attribute.Value, "ibc/") {
+					amountString := attribute.Value
+					amountSplit := strings.Split(amountString, "ibc/")
+					if len(amountSplit) != 2 {
+						return nil, fmt.Errorf("error parsing amount %s", amountString)
+					}
+
+					amountInt, ok = sdk.NewIntFromString(amountSplit[0])
+					if !ok {
+						return nil, fmt.Errorf("error parsing amount %s", amountString)
+					}
+					denom = "ibc/" + amountSplit[1]
+				}
+			}
+		}
+	}
+	if amountInt.IsZero() {
+		return nil, errors.New("Unable to find liquid stake amount from tx")
+	}
+
+	return &sdk.TxResponse{
+		Height:    resTx.Height,
+		TxHash:    resTx.Hash.String(),
+		Codespace: resTx.TxResult.Codespace,
+		Code:      resTx.TxResult.Code,
+		Data:      strings.ToUpper(hex.EncodeToString(resTx.TxResult.Data)),
+		RawLog:    resTx.TxResult.Log,
+		Info:      resTx.TxResult.Info,
+		GasWanted: resTx.TxResult.GasWanted,
+		GasUsed:   resTx.TxResult.GasUsed,
+		Timestamp: block.Block.Time.String(),
+		Events:    resTx.TxResult.Events,
+		Tx:        tx,
+	}, nil
 }
 
 // formatTxResults parses the indexed txs into a slice of TxResponse objects.
