@@ -39,6 +39,9 @@ func DefaultTxDecoder(cdc codec.ProtoCodecMarshaler) sdk.TxDecoder {
 		// allow non-critical unknown fields in TxBody
 		txBodyHasUnknownNonCriticals, err := unknownproto.RejectUnknownFields(raw.BodyBytes, &body, true, cdc.InterfaceRegistry())
 		if err != nil {
+			// TODO: Catch error for MsgLiquidStake unknown wire type 2 and ignore it
+			// And then update unmarshaller in generated tx.pb.go to handle both wire type 0 (int)
+			// and wire type 2 (sdk.Int)
 			return nil, sdkerrors.Wrap(sdkerrors.ErrTxDecode, err.Error())
 		}
 

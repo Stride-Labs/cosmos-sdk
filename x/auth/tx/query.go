@@ -102,8 +102,29 @@ func QueryTx(clientCtx client.Context, hashHexStr string) (*sdk.TxResponse, erro
 }
 
 func tryParsingLiquidStakeTx(resTx *coretypes.ResultTx, block *coretypes.ResultBlock) (*sdk.TxResponse, error) {
+	// Add mapping to other ibc denoms
+	// Build MsgLiquidStake using the native denom and amountInt
+	//  1. Import stride in the SDK (might cause circular dependency)
+	//      - Copy over this to import
+	//         stakeibctypes "github.com/Stride-Labs/stride/v18/x/stakeibc/types"
+	//      - Run go mod tidy
+	//  2. Copy over x/stakeibc/tx.pb.go
+	//      - Make a types folder in x/auth/tx
+	//      - Place the tx.pb.go in there
+	//      - import it from here by doing
+	//           stakeibctypes github.com/cosmos/cosmos-sdk/x/auth/tx/types
+	//      - You may also need to copy over some of the "message_" types files
+	//      - you can remove all other message types from tx.pb.go besides MsgLiquidStake
+	//        and also copy over x/stakeibc/types/message_liquid_stake.go
+	//   3. Define the msg_liquid_stake proto and compile it here
+	// Build the tx struct with the nested MsgLiquidStake and return from this
+
+	ibcToNativeDenomMap := map[string]string{
+		"ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2": "uatom",
+	}
+
 	var ok bool
-	var denom string
+	var ibcDenom string
 	amountInt := math.ZeroInt()
 	for _, event := range resTx.TxResult.Events {
 		if event.Type == "coin_spent" {
@@ -119,14 +140,20 @@ func tryParsingLiquidStakeTx(resTx *coretypes.ResultTx, block *coretypes.ResultB
 					if !ok {
 						return nil, fmt.Errorf("error parsing amount %s", amountString)
 					}
-					denom = "ibc/" + amountSplit[1]
+					ibcDenom = "ibc/" + amountSplit[1]
 				}
 			}
 		}
 	}
 	if amountInt.IsZero() {
-		return nil, errors.New("Unable to find liquid stake amount from tx")
+		return nil, errors.New("unable to find liquid stake amount from tx")
 	}
+	nativeDenom, ok := ibcToNativeDenomMap[ibcDenom]
+	if !ok {
+		return nil, errors.New("IBC Denom is not registered in map")
+	}
+
+	fmt.Printf("Coin: %+v%s\n", amountInt, nativeDenom)
 
 	return &sdk.TxResponse{
 		Height:    resTx.Height,
@@ -140,7 +167,7 @@ func tryParsingLiquidStakeTx(resTx *coretypes.ResultTx, block *coretypes.ResultB
 		GasUsed:   resTx.TxResult.GasUsed,
 		Timestamp: block.Block.Time.String(),
 		Events:    resTx.TxResult.Events,
-		Tx:        tx,
+		// Tx:        tx,
 	}, nil
 }
 
