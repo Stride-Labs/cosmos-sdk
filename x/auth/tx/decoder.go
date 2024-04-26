@@ -2,6 +2,7 @@ package tx
 
 import (
 	"fmt"
+	"strings"
 
 	"google.golang.org/protobuf/encoding/protowire"
 
@@ -38,7 +39,9 @@ func DefaultTxDecoder(cdc codec.ProtoCodecMarshaler) sdk.TxDecoder {
 
 		// allow non-critical unknown fields in TxBody
 		txBodyHasUnknownNonCriticals, err := unknownproto.RejectUnknownFields(raw.BodyBytes, &body, true, cdc.InterfaceRegistry())
-		if err != nil {
+		if strings.Contains(err.Error(), "Mismatched \"*types.MsgLiquidStake\": {TagNum: 2, GotWireType: \"varint\" != WantWireType: \"bytes\"}") {
+			// skip this to attempt parsing old liquid stake amount types
+		} else if err != nil {
 			return nil, sdkerrors.Wrap(sdkerrors.ErrTxDecode, err.Error())
 		}
 
