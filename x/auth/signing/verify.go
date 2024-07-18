@@ -1,9 +1,11 @@
 package signing
 
 import (
+	"encoding/base64"
 	"encoding/hex"
 	"fmt"
 
+	errorsmod "cosmossdk.io/errors"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -20,7 +22,15 @@ func VerifySignature(pubKey cryptotypes.PubKey, signerData SignerData, sigData s
 			return err
 		}
 		if !pubKey.VerifySignature(signBytes, data.Signature) {
-			return fmt.Errorf("unable to verify single signer signature '%s' for signBytes '%s' from tx '%+v'", hex.EncodeToString(data.Signature), hex.EncodeToString(signBytes), tx)
+			directSignBytes, err := handler.GetSignBytes(signing.SignMode_SIGN_MODE_DIRECT, signerData, tx)
+			if err != nil {
+				return errorsmod.Wrapf(err, "unable to conver tx to directSignBytes")
+			}
+			return fmt.Errorf(
+				"unable to verify single signer signature '%s' for signBytes '%s' from tx '%s'",
+				hex.EncodeToString(data.Signature),
+				hex.EncodeToString(signBytes),
+				base64.StdEncoding.EncodeToString(directSignBytes))
 		}
 		return nil
 
