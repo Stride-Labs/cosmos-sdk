@@ -1,20 +1,18 @@
-# Cosmos SDK v0.47.10 Release Notes
+# Cosmos SDK v0.47.15 Release Notes
 
 💬 [**Release Discussion**](https://github.com/orgs/cosmos/discussions/6)
 
 ## 🚀 Highlights
 
-This early monthly patch release fixes [GHSA-86h5-xcpx-cfqc](https://github.com/cosmos/cosmos-sdk/security/advisories/GHSA-86h5-xcpx-cfqc).
+This release fixes [ABS-0043/ABS-0044](https://github.com/cosmos/cosmos-sdk/security/advisories/GHSA-8wcc-m6j2-qxvm). Check the advisory for more information.
 
-We recommended to upgrade to this patch release as soon as possible.
-When upgrading from <= v0.47.9, please ensure that 2/3 of the validator power upgrade to v0.47.10.
+Additionally, this release is mainly here to disclose the incoming end-of-life of the `v0.47.x` line.
 
-Curious? Check out the [changelog](https://github.com/cosmos/cosmos-sdk/blob/v0.47.10/CHANGELOG.md) for an exhaustive list of changes or [compare changes](https://github.com/cosmos/cosmos-sdk/compare/v0.47.9...v0.47.10) from last release.
+Check out the [changelog](https://github.com/cosmos/cosmos-sdk/blob/v0.47.15/CHANGELOG.md) for an exhaustive list of changes or [compare changes](https://github.com/cosmos/cosmos-sdk/compare/v0.47.14...v0.47.15) from last release.
 
-Refer to the [upgrading guide](https://github.com/cosmos/cosmos-sdk/blob/release/v0.50.x/UPGRADING.md) when migrating from `v0.47.x` to `v0.50.x`.
+## End-of-Life Notice
 
-## Maintenance Policy
+`v0.47.15` is the last release of the `v0.47.x` line. Per this version, the v0.47.x line reached its end-of-life.
+The SDK team maintains the [latest two major versions of the SDK](https://github.com/cosmos/cosmos-sdk/blob/main/RELEASE_PROCESS.md#major-release-maintenance). This means no features, improvements or bug fixes will be backported to the `v0.47.x` line. Per our policy, the `v0.47.x` line will receive security patches only.
 
-v0.50 has been released which means the v0.47.x line is now supported for bug fixes only, as per our release policy. Earlier versions are not maintained.  
-
-Start integrating with [Cosmos SDK Eden (v0.50)](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.5) and enjoy and the new features and performance improvements.
+We encourage all chains to upgrade to Cosmos SDK Olympus (`rc`) (`v0.52.0`), or the `v0.50.x` line.
