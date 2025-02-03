@@ -202,12 +202,15 @@ func (sgcd SigGasConsumeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simula
 type SigVerificationDecorator struct {
 	ak              AccountKeeper
 	signModeHandler authsigning.SignModeHandler
+	txDecoder       sdk.TxDecoder
+	txJSONEncoder   sdk.TxEncoder
 }
 
-func NewSigVerificationDecorator(ak AccountKeeper, signModeHandler authsigning.SignModeHandler) SigVerificationDecorator {
+func NewSigVerificationDecorator(ak AccountKeeper, signModeHandler authsigning.SignModeHandler, txDecoder sdk.TxDecoder, txJSONEncoder sdk.TxEncoder) SigVerificationDecorator {
 	return SigVerificationDecorator{
-		ak:              ak,
-		signModeHandler: signModeHandler,
+		ak:            ak,
+		txDecoder:     txDecoder,
+		txJSONEncoder: txJSONEncoder,
 	}
 }
 
@@ -289,7 +292,7 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 
 		// no need to verify signatures on recheck tx
 		if !simulate && !ctx.IsReCheckTx() {
-			err := authsigning.VerifySignature(pubKey, signerData, sig.Data, svd.signModeHandler, tx)
+			err := authsigning.VerifySignature(pubKey, signerData, sig.Data, svd.signModeHandler, tx, svd.txDecoder, svd.txJSONEncoder)
 			if err != nil {
 				var errMsg string
 				if OnlyLegacyAminoSigners(sig.Data) {

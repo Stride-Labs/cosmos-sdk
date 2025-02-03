@@ -17,6 +17,8 @@ type HandlerOptions struct {
 	SignModeHandler        authsigning.SignModeHandler
 	SigGasConsumer         func(meter sdk.GasMeter, sig signing.SignatureV2, params types.Params) error
 	TxFeeChecker           TxFeeChecker
+	TxDecoder              sdk.TxDecoder
+	TxJSONEncoder          sdk.TxEncoder
 }
 
 // NewAnteHandler returns an AnteHandler that checks and increments sequence
@@ -35,6 +37,14 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrLogic, "sign mode handler is required for ante builder")
 	}
 
+	if options.TxDecoder == nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrLogic, "tx decoder is required for ante builder")
+	}
+
+	if options.TxJSONEncoder == nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrLogic, "tx json encoder is required for ante builder")
+	}
+
 	anteDecorators := []sdk.AnteDecorator{
 		NewSetUpContextDecorator(), // outermost AnteDecorator. SetUpContext must be called first
 		NewExtensionOptionsDecorator(options.ExtensionOptionChecker),
@@ -46,7 +56,7 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		NewSetPubKeyDecorator(options.AccountKeeper), // SetPubKeyDecorator must be called before all signature verification decorators
 		NewValidateSigCountDecorator(options.AccountKeeper),
 		NewSigGasConsumeDecorator(options.AccountKeeper, options.SigGasConsumer),
-		NewSigVerificationDecorator(options.AccountKeeper, options.SignModeHandler),
+		NewSigVerificationDecorator(options.AccountKeeper, options.SignModeHandler, options.TxDecoder, options.TxJSONEncoder),
 		NewIncrementSequenceDecorator(options.AccountKeeper),
 	}
 
