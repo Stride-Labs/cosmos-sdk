@@ -1,6 +1,7 @@
 package ante
 
 import (
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
@@ -17,7 +18,7 @@ type HandlerOptions struct {
 	SignModeHandler        authsigning.SignModeHandler
 	SigGasConsumer         func(meter sdk.GasMeter, sig signing.SignatureV2, params types.Params) error
 	TxFeeChecker           TxFeeChecker
-	TxDecoder              sdk.TxDecoder
+	Cdc                    codec.Codec
 	TxJSONEncoder          sdk.TxEncoder
 }
 
@@ -37,8 +38,8 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrLogic, "sign mode handler is required for ante builder")
 	}
 
-	if options.TxDecoder == nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrLogic, "tx decoder is required for ante builder")
+	if options.Cdc == nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrLogic, "cdc is required for ante builder")
 	}
 
 	if options.TxJSONEncoder == nil {
@@ -56,7 +57,7 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		NewSetPubKeyDecorator(options.AccountKeeper), // SetPubKeyDecorator must be called before all signature verification decorators
 		NewValidateSigCountDecorator(options.AccountKeeper),
 		NewSigGasConsumeDecorator(options.AccountKeeper, options.SigGasConsumer),
-		NewSigVerificationDecorator(options.AccountKeeper, options.SignModeHandler, options.TxDecoder, options.TxJSONEncoder),
+		NewSigVerificationDecorator(options.AccountKeeper, options.SignModeHandler, options.Cdc, options.TxJSONEncoder),
 		NewIncrementSequenceDecorator(options.AccountKeeper),
 	}
 

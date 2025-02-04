@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"fmt"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -202,15 +203,15 @@ func (sgcd SigGasConsumeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simula
 type SigVerificationDecorator struct {
 	ak              AccountKeeper
 	signModeHandler authsigning.SignModeHandler
-	txDecoder       sdk.TxDecoder
+	cdc             codec.Codec
 	txJSONEncoder   sdk.TxEncoder
 }
 
-func NewSigVerificationDecorator(ak AccountKeeper, signModeHandler authsigning.SignModeHandler, txDecoder sdk.TxDecoder, txJSONEncoder sdk.TxEncoder) SigVerificationDecorator {
+func NewSigVerificationDecorator(ak AccountKeeper, signModeHandler authsigning.SignModeHandler, cdc codec.Codec, txJSONEncoder sdk.TxEncoder) SigVerificationDecorator {
 	return SigVerificationDecorator{
 		ak:              ak,
 		signModeHandler: signModeHandler,
-		txDecoder:       txDecoder,
+		cdc:             cdc,
 		txJSONEncoder:   txJSONEncoder,
 	}
 }
@@ -293,8 +294,7 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 
 		// no need to verify signatures on recheck tx
 		if !simulate && !ctx.IsReCheckTx() {
-			ctx.Logger().Error(fmt.Sprintf("calling authsigning.VerifySignature(pubKey, signerData, sig.Data, svd.signModeHandler, tx, svd.txDecoder, svd.txJSONEncoder) with pubKey='%+v' signerData='%+v' sig.Data='%+v' svd.signModeHandler='%+v' tx='%+v' svd.txDecoder='%+v' svd.txJSONEncoder='%+v'", pubKey, signerData, sig.Data, svd.signModeHandler, tx, svd.txDecoder, svd.txJSONEncoder))
-			err := authsigning.VerifySignature(pubKey, signerData, sig.Data, svd.signModeHandler, tx, svd.txDecoder, svd.txJSONEncoder)
+			err := authsigning.VerifySignature(pubKey, signerData, sig.Data, svd.signModeHandler, tx, svd.cdc, svd.txJSONEncoder)
 			if err != nil {
 				var errMsg string
 				if OnlyLegacyAminoSigners(sig.Data) {

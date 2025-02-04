@@ -99,8 +99,7 @@ func newAnteHandler(txConfig client.TxConfig, in TxInputs) (sdk.AnteHandler, err
 			SignModeHandler: txConfig.SignModeHandler(),
 			FeegrantKeeper:  in.FeeGrantKeeper,
 			SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
-			TxDecoder:       txConfig.TxDecoder(),
-			TxJSONEncoder:   txConfig.TxJSONEncoder(),
+			Cdc:             in.ProtoCodecMarshaler,
 		},
 	)
 	if err != nil {

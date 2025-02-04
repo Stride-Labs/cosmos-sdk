@@ -6,15 +6,18 @@ import (
 	"fmt"
 
 	errorsmod "cosmossdk.io/errors"
+	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
+
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
 // VerifySignature verifies a transaction signature contained in SignatureData abstracting over different signing modes
 // and single vs multi-signatures.
-func VerifySignature(pubKey cryptotypes.PubKey, signerData SignerData, sigData signing.SignatureData, handler SignModeHandler, tx sdk.Tx, txDecoder sdk.TxDecoder, txJSONEncoder sdk.TxEncoder) error {
+func VerifySignature(pubKey cryptotypes.PubKey, signerData SignerData, sigData signing.SignatureData, handler SignModeHandler, tx sdk.Tx, cdc codec.Codec, txJSONEncoder sdk.TxEncoder) error {
 	switch data := sigData.(type) {
 	case *signing.SingleSignatureData:
 		signBytes, err := handler.GetSignBytes(data.SignMode, signerData, tx)
@@ -27,12 +30,13 @@ func VerifySignature(pubKey cryptotypes.PubKey, signerData SignerData, sigData s
 				return errorsmod.Wrapf(err, "unable to conver tx to directSignBytes")
 			}
 
-			tx, err := txDecoder(directSignBytes)
+			var tx sdktx.Tx
+			err = cdc.Unmarshal(directSignBytes, &tx)
 			if err != nil {
 				return err
 			}
 
-			directJson, err := txJSONEncoder(tx)
+			directJson, err := txJSONEncoder(&tx)
 			if err != nil {
 				return err
 			}
