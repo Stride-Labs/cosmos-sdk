@@ -292,6 +292,7 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 
 		// no need to verify signatures on recheck tx
 		if !simulate && !ctx.IsReCheckTx() {
+			ctx.Logger().Error(fmt.Sprintf("calling authsigning.VerifySignature(pubKey, signerData, sig.Data, svd.signModeHandler, tx, svd.txDecoder, svd.txJSONEncoder) with pubKey='%+v' signerData='%+v' sig.Data='%+v' svd.signModeHandler='%+v' tx='%+v' svd.txDecoder='%+v' svd.txJSONEncoder='%+v'", pubKey, signerData, sig.Data, svd.signModeHandler, tx, svd.txDecoder, svd.txJSONEncoder))
 			err := authsigning.VerifySignature(pubKey, signerData, sig.Data, svd.signModeHandler, tx, svd.txDecoder, svd.txJSONEncoder)
 			if err != nil {
 				var errMsg string
