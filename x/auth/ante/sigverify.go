@@ -208,9 +208,10 @@ type SigVerificationDecorator struct {
 
 func NewSigVerificationDecorator(ak AccountKeeper, signModeHandler authsigning.SignModeHandler, txDecoder sdk.TxDecoder, txJSONEncoder sdk.TxEncoder) SigVerificationDecorator {
 	return SigVerificationDecorator{
-		ak:            ak,
-		txDecoder:     txDecoder,
-		txJSONEncoder: txJSONEncoder,
+		ak:              ak,
+		signModeHandler: signModeHandler,
+		txDecoder:       txDecoder,
+		txJSONEncoder:   txJSONEncoder,
 	}
 }
 
